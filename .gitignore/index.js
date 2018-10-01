@@ -25,7 +25,7 @@ function play(connection, message) {
 }
 
 var servers = {};
-bot.login("NDMwNzkwMjQ2NTkwOTcxOTM2.Dj_Hxg.bRCvm4mJmTCmEvqlj0GrE9UgAmU")
+bot.login(process.env.TOKEN)
 
 //Avatar, Status, Playing...
 bot.on('ready', function () {
