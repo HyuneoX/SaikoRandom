@@ -3,108 +3,67 @@ const bot = new Discord.Client()
 const salut = require('./Commandes/salut')
 const salut2 = require('./Commandes/salut2')
 const PREFIX = "=";
-const YTDL = require('ytdl-core')
-const music = require('discord.js-music-v11');
 var prefix = ("=");
 var dispatcher;
 var fs = require('fs');
 var userData = JSON.parse(fs.readFileSync('./userData.json', 'utf8'));
 var message = 
-process.setMaxListeners(0);
-function play(connection, message) {
-    var server = servers[message.guild.id];
-
-    server.dispatcher = connection.playStream(YTDL(server.queue[0], {filter: "audioonly"}));
-
-    server.queue.shift();
-
-    server.dispatcher.on("end", function() {
-        if(server.queue[0]) play(connection, message);
-        else connection.disconnect();
-    });
-}
+process.setMaxListeners(20);
 
 var servers = {};
 bot.login(process.env.TOKEN)
 
-//Avatar, Status, Playing...
-bot.on('ready', function () {
-//bot.user.setAvatar('./pop.jpg').catch(console.error)
-bot.user.setStatus('Online')
-bot.user.setActivity('Final Fantasy XI')
+//Rôle secret
+bot.on('message', message => {
+    var Secret = message.guild.roles.find("name", "🌼 - Secret")
+    if(message.content === "I love secrets and flowers")
+        message.member.addRole(Secret)
+        
+})
+bot.on('message', message => {
+    if(message.content === "I love secrets and flowers")
+    message.author.send('Le rôle "🌼 - Secret" a bien été rajouté ! Bravo !')
 })
 
-//Musique
-bot.on("message", function(message) {
-    if (message.author.equals(bot.user)) return;
-
-    if (!message.content.startsWith(PREFIX)) return;
-
-var args = message.content.substring(PREFIX.length).split(" ");
-
-switch (args[0].toLowerCase()) {
-            case "play":
-                message.channel.send("Let's go~ ");
-                if (!args[1]) {
-                    message.channel.sendMessage("Please provide a link");
-                    return;
-                }
-
-                if(!message.member.voiceChannel) {
-                    message.channel.sendMessage("Il faut rejoindre un channel avant de pouvoir écouter de la musique.");
-                    return;
-                }
-
-                if(!servers[message.guild.id]) servers[message.guild.id] = {
-                    queue: []
-                };
-
-                var server = servers[message.guild.id];
-
-                server.queue.push(args[1]);
-
-                if(!message.guild.voiceConnection) message.member.voiceChannel.join().then(function(connection) {
-                    play(connection, message);
-                });
-                break;
-            case "skip":
-                message.channel.send("Music skipped~ !");
-                var server = servers[message.guild.id];
-
-                if (server.dispatcher) server.dispatcher.end();
-            break;
-            case "stop":
-                message.channel.send("Bye Bye~");
-                var server = servers[message.guild.id];
-
-                if(message.guild.voiceConnection) message.guild.voiceConnection.disconnect();
-            break;
-    }
-});
-
+//Avatar, Status, Playing...
+    bot.on('ready', function () {
+//bot.user.setAvatar('./pop.jpg').catch(console.error)
+    bot.user.setStatus('Online')
+    bot.user.setActivity('Final Fantasy XI')
+})
 
 //Bienvenue, Départ, Autorole
     bot.on('guildMemberAdd', member => {
-        member.guild.channels.find("name", "general").send(`Un(e) nouvel(le) arrrivant(e) dans un monde random est descendu(e) du ciel. Veuillez guider ${member} dans ce monde dangereux (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧`)
+        member.guild.channels.find("name", "general").send(``)
     })
     bot.on("guildMemberRemove", member => {
-        member.guild.channels.find("name", "general").send(`${member} nous a quitté, un ange partit trop tôt. o(TヘTo)`)       
+        member.guild.channels.find("name", "general").send(`${member}, la tribu a décidée de vous éliminer et leur sentence est irrévocable. pfuush`)       
 })
     bot.on('guildMemberAdd', member => {
-        var role = member.guild.roles.find('name', '🍜 - Clients');
+        var role = member.guild.roles.find('name', '🌸 - Visiteurs');
         member.addRole(role)
     })
-//Avatar des gens
-bot.on("message", function (message){
 
-    let user = message.mentions.users.first() || message.author; // User mention
-    if(message.content === prefix + "avatar") {
+
+//Avatar
+    bot.on("message", function (message){
+        if(message.content === prefix + "avatar") {
+    if (message.author.bot) return undefined;
+
+    let msg = message.content.toLowerCase();
+    let args = message.content.slice(prefix.length).trim().split(' ');
+    let command = args.shift().toLowerCase();
+
+
+        let user = message.mentions.users.first() || message.author; // User mention
+
     let embed = new Discord.RichEmbed()
     .setAuthor(`${user.username}'s Avatar`)
     .setImage(user.displayAvatarURL) // User's avatar
     .setColor('RANDOM') // Generate random color
     message.channel.send(embed)
 }});
+
 //Commandes
 bot.on("message", function (message){
     let commandUsed =
@@ -122,22 +81,16 @@ bot.on("message", function(message){
         color: 0xffe993,
         fields:[
             {
-                name:"Musique :",
-                value:`**\`=play\`** suivi d'un URL YouTube pour ramener Saiko et la faire jouer de la musique.
-**\`=skip\`** pour passer à la prochaine musique.
-**\`=stop\`** pour faire quitter Saiko du salon audio.`,
-                inline: true
-            },
-            {
                 name:"Autorôle :",
-                value:`**\`=rôles\`** vous donnera la liste des rôles que vous pouvez obtenir via une commande.`,
+                value:`**\`=roles\`** vous donnera la liste des rôles que vous pouvez obtenir via une commande.`,
                 inline:true
             },
             {
                 name:"Autres :",
                 value:`**\`=faq\`** suivi d'une question répondant par oui ou par non.
 **\`=ping\`** vous montre la latence entre vous et le serveur.
-**\`=gif\`** enverra un gif aléatoire.`,
+**\`=gif\`** enverra un gif aléatoire.
+**\`=avatar\`** votre avatar sera affiché en grand.`,
                 inline:true
             },
             {
@@ -155,7 +108,7 @@ bot.on("message", function(message){
 })
 
 //Random Images
-gif1 = "./gif/gif1.gif"; gif2 = "./gif/gif2.gif"; gif3 = "./gif/gif3.gif"; gif4 = "./gif/gif4.gif"; gif5 = "./gif/gif5.gif"; gif6 = "./gif/gif6.gif"; gif7 = "./gif/gif7.gif"; gif8 = "./gif/gif8.gif"; gif9 = "./gif/gif9.gif"; gif10 = "./gif/gif10.gif"; gif11 = "./gif/gif11.gif"; gif12 = "./gif/gif12.gif"; gif13 = "./gif/gif13.gif"; gif14 = "./gif/gif14.gif"; gif15 = "./gif/gif15.gif"; gif16 = "./gif/gif16.gif"; gif17 = "./gif/gif17.gif"; gif18 = "./gif/gif18.gif"; gif19 = "./gif/gif19.gif"; gif20 = "./gif/gif20.gif"; gif21 = "./gif/gif21.gif";
+gif1 = "./gif/gif1.gif"; gif2 = "./gif/gif2.gif"; gif3 = "./gif/gif3.gif"; gif4 = "./gif/gif4.gif"; gif5 = "./gif/gif5.gif"; gif6 = "./gif/gif6.gif"; gif7 = "./gif/gif7.gif"; gif8 = "./gif/gif8.gif"; gif9 = "./gif/gif9.gif"; gif10 = "./gif/gif10.gif"; gif11 = "./gif/gif11.gif"; gif12 = "./gif/gif12.gif"; gif13 = "./gif/gif13.gif"; gif14 = "./gif/gif14.gif"; gif15 = "./gif/gif15.gif"; gif16 = "./gif/gif16.gif"; gif17 = "./gif/gif17.gif"; gif18 = "./gif/gif18.gif"; gif19 = "./gif/gif19.gif"; gif20 = "./gif/gif20.gif"; gif21 = "./gif/gif21.gif"; gif22 = "./gif/gif22.gif"; gif23 = "./gif/gif23.gif"; gif24 = "./gif/gif24.gif"; gif25 = "./gif/gif25.gif"; gif26 = "./gif/gif26.gif"; gif27 = "./gif/gif27.gif";
 bot.on('message', message => {
     if(message.content === prefix + "gif") {
     number = 3;
@@ -180,6 +133,15 @@ bot.on('message', message => {
         case 17: message.channel.send ({ files: [gif17] });break;
         case 18: message.channel.send ({ files: [gif18] });break;
         case 19: message.channel.send ({ files: [gif19] });break;
+        case 20: message.channel.send ({ files: [gif20] });break;
+        case 21: message.channel.send ({ files: [gif21] });break;
+        case 22: message.channel.send ({ files: [gif22] });break;
+        case 23: message.channel.send ({ files: [gif23] });break;
+        case 24: message.channel.send ({ files: [gif24] });break;
+        case 25: message.channel.send ({ files: [gif25] });break;
+        case 26: message.channel.send ({ files: [gif26] });break;
+        case 27: message.channel.send ({ files: [gif27] });break;
+
     }
 }})
 
@@ -226,7 +188,9 @@ bot.on("message", function(message){
                 "J'ai demandé à M6 il m'a dit oui ⊂(￣▽￣)⊃",
                 "On me dit dans l'oreillette que tu perds ton temps ヽ(　￣д￣)ノ",
                 "@:sushi: - Random,  venez vous occupez des invités svp..     <(￣ ﹌ ￣)>",
-                "Je t'aime bien donc on va dire oui ~ヾ(・ω・)"
+                "Je t'aime bien donc on va dire oui ~ヾ(・ω・)",
+                "J'aime les fleurs et toi ? o(>ω<)o",
+                "Parfois, il suffit de répondre et de ne pas poser de questions... Sinon j'aimes les fleurs et toi ? (ﾉ´ヮ`)ﾉ*: ･ﾟ"
             ];
 
             let reponse = (replys[Math.floor(Math.random() * replys.length)])
@@ -238,25 +202,13 @@ bot.on("message", function(message){
 
 //Sondages
 bot.on('message', message => {
-
-    if(message.content === prefix + "infodiscord") {
-        var embed = new Discord.RichEmbed()
-        .setDescription("Information du Discord")
-        .addField("nom du discord", message.guild.name)
-        .addField("Crée le", message.guild.createdAt)
-        .addField("Tu as rejoin le", message.member.JoinedAt)
-        .addField("Utilisateurs sur le discord", message.guild.memberCount)
-        .setColor("0x0000FF")
-    message.channel.sendEmbed(embed)
-
-    }
-
     if (message.content.startsWith(prefix + "sondage")) {
-        if(message.author.id == "176257694716395520"){
+        
+        if(message.author.id == "176257694716395520" || message.author.id == "240879027689226242" || message.author.id == "184383368924758016" || message.author.id == "244482258772295690"){
             let args = message.content.split(" ").slice(1);
             let thingToEcho = args.join (" ")
             var embed = new Discord.RichEmbed()
-                .setDescription("Sondage")
+                .setDescription("Sondage :")
                 .addField(thingToEcho, "Répondre avec :white_check_mark: ou :x:")
                 .setColor("0xB40404")
                 .setTimestamp()
@@ -267,7 +219,7 @@ bot.on('message', message => {
             }).catch(function() {
             });
             }else{
-                return message.reply("Tu n'as pas la permission.")
+                return message.author.send("Tu n'as pas la permission.")
 }}})
 
 //Jem🖤Ped
@@ -290,17 +242,6 @@ bot.on('message', message => {
   })
   
 //Autorole
-//Overwatch
-bot.on('message', message => {
-    var Over = message.guild.roles.find("name", "Overwatch")
-    if(message.content === prefix + "Over")
-        message.member.addRole(Over)
-        
-})
-bot.on('message', message => {
-    if(message.content === prefix + "Over")
-    message.channel.send('Le rôle "Overwatch" a bien été rajouté !')
-})
 //League of Legends
 bot.on('message', message => {
     var LoL = message.guild.roles.find("name", "League of Legends")
@@ -311,6 +252,17 @@ bot.on('message', message => {
 bot.on('message', message => {
     if(message.content === prefix + "LoL")
     message.channel.send('Le rôle "League of Legends" a bien été rajouté !')
+})
+//Overwatch
+bot.on('message', message => {
+    var Over = message.guild.roles.find("name", "Overwatch")
+    if(message.content === prefix + "Over")
+        message.member.addRole(Over)
+        
+})
+bot.on('message', message => {
+    if(message.content === prefix + "Over")
+    message.channel.send('Le rôle "Overwatch" a bien été rajouté !')
 })
 //Minecraft
 bot.on('message', message => {
@@ -367,7 +319,7 @@ bot.on('message', message => {
     if(message.content === prefix + "CS:GO")
         message.channel.send('Le rôle "Counter Strike" a bien été rajouté !')
 })
-
+//SoulWorker
 bot.on('message', message => {
     var SoulWorker = message.guild.roles.find("name", "SoulWorker")
     if(message.content === prefix + "SoulWorker")
@@ -378,10 +330,108 @@ bot.on('message', message => {
     if(message.content === prefix + "SoulWorker")
         message.channel.send('Le rôle "SoulWorker" a bien été rajouté !')
 })
-
+//Rocket League
+bot.on('message', message => {
+    var RL = message.guild.roles.find("name", "Rocket League")
+    if(message.content === prefix + "RL")
+        message.member.addRole(RL)
+        
+})
+bot.on('message', message => {
+    if(message.content === prefix + "RL")
+    message.channel.send('Le rôle "Rocket League" a bien été rajouté !')
+})
+//Yu-Gi-Oh
+bot.on('message', message => {
+    var Yugi = message.guild.roles.find("name", "Yu-Gi-Oh")
+    if(message.content === prefix + "Yugi")
+        message.member.addRole(Yugi)
+        
+})
+bot.on('message', message => {
+    if(message.content === prefix + "Yugi")
+    message.channel.send('Le rôle "Yu-Gi-Oh" a bien été rajouté !')
+})
+//Trove
+bot.on('message', message => {
+    var Trove = message.guild.roles.find("name", "Trove")
+    if(message.content === prefix + "Trove")
+        message.member.addRole(Trove)
+        
+})
+bot.on('message', message => {
+    if(message.content === prefix + "Trove")
+    message.channel.send('Le rôle "Trove" a bien été rajouté !')
+})
+//Fortnite
+bot.on('message', message => {
+    var Fortnite = message.guild.roles.find("name", "Fortnite")
+    if(message.content === prefix + "Fortnite")
+        message.member.addRole(Fortnite)
+        
+})
+bot.on('message', message => {
+    if(message.content === prefix + "Fortnite")
+    message.channel.send('Le rôle "Fortnite" a bien été rajouté !')
+})
+//Blockade 3D
+bot.on('message', message => {
+    var Blockade = message.guild.roles.find("name", "Blockade 3D")
+    if(message.content === prefix + "Blockade")
+        message.member.addRole(Blockade)
+        
+})
+bot.on('message', message => {
+    if(message.content === prefix + "Blockade")
+    message.channel.send('Le rôle "Blockade 3D" a bien été rajouté !')
+})
+//PUBG
+bot.on('message', message => {
+    var PUBG = message.guild.roles.find("name", "PUBG")
+    if(message.content === prefix + "PUBG")
+        message.member.addRole(PUBG)
+        
+})
+bot.on('message', message => {
+    if(message.content === prefix + "PUBG")
+    message.channel.send('Le rôle "PUBG" a bien été rajouté !')
+})
+//Rainbow Six Siege
+bot.on('message', message => {
+    var R6 = message.guild.roles.find("name", "Rainbow Six Siege")
+    if(message.content === prefix + "R6")
+        message.member.addRole(R6)
+        
+})
+bot.on('message', message => {
+    if(message.content === prefix + "R6")
+    message.channel.send('Le rôle "Rainbow Six Siege" a bien été rajouté !')
+})
+//World of Warcraft
+bot.on('message', message => {
+    var WoW = message.guild.roles.find("name", "World of Warcraft")
+    if(message.content === prefix + "WoW")
+        message.member.addRole(WoW)
+        
+})
+bot.on('message', message => {
+    if(message.content === prefix + "WoW")
+    message.channel.send('Le rôle "World of Warcraft" a bien été rajouté !')
+})
+//Hearthstone
+bot.on('message', message => {
+    var HS = message.guild.roles.find("name", "Hearthstone")
+    if(message.content === prefix + "HS")
+        message.member.addRole(HS)
+        
+})
+bot.on('message', message => {
+    if(message.content === prefix + "HS")
+    message.channel.send('Le rôle "Hearthstone" a bien été rajouté !')
+})
 //Listes des rôles
 bot.on("message", function(message){
-    if (message.content === prefix + 'rôles')
+    if (message.content === prefix + 'roles')
 
     message.channel.send({embed:{
         title:"Liste des rôles :",
@@ -391,14 +441,23 @@ bot.on("message", function(message){
             {
                 name:"Jeux :",
                 value:`Il vous suffira d'écrire le suffix "=" suivis de l'un de ses jeux pour obtenir le rôle :
-• Over
-• LoL
-• CS:GO
+• Over (Overwatch)
+• LoL (League of Legends)
+• CS:GO (Countre Strike)
 • Minecraft
 • Osu!
 • Elsword
 • Dofus
-• SoulWorker`,
+• SoulWorker
+• RL (Rocket League)
+• Yugi (Yu-Gi-Oh)
+• Trove
+• Fortnite
+• Blockade 3D
+• PUBG
+• R6 (Rainbow Six Siege)
+• WoW (Wolrd of Warcraft)
+• HS (Hearthstone)`,
                 inline: true
             }
         ],
